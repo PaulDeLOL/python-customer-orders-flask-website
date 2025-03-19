@@ -12,7 +12,14 @@ def new_customer():
 
 @app.route('/listCustomers')
 def list_customers():
-    return "Hello List Customers"
+    conn = sql.connect("CustOrders.db")
+    conn.row_factory = sql.Row
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM Customers;")
+    customer_rows = cur.fetchall()
+
+    return render_template("listCustomers.html", rows = customer_rows)
 
 @app.route('/listOrders')
 def list_orders():
