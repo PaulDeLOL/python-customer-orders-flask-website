@@ -4,11 +4,11 @@ app = Flask(__name__)
 
 @app.route('/')
 def homepage():
-    return render_template("home.html")
+    return render_template("homepage.html")
 
 @app.route('/newCustomer')
 def new_customer():
-    return "Hello New Customer"
+    return render_template("newCustomer.html")
 
 @app.route('/listCustomers')
 def list_customers():
