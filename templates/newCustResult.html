@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>New Customer Result</title>
+</head>
+<body>
+    {{ message }}
+    {% for error in errors_table %}
+        <br>
+        {{ error }}
+    {% endfor %}
+    <h3><a href="/">Go back to homepage</a></h3>
+</body>
+</html>
