@@ -8,23 +8,23 @@
     <h1>List of Customers</h1>
 
     <table border=3>
-      <tr align="center">
-        <td>Name</td>
-        <td width=40>Age</td>
-        <td>Phone Number</td>
-        <td>Security Level</td>
-        <td>Login Password</td>
-      </tr>
+        <tr align="center">
+            <td>Name</td>
+            <td width=40>Age</td>
+            <td>Phone Number</td>
+            <td>Security Level</td>
+            <td>Login Password</td>
+        </tr>
 
-      {% for index in rows %}
-      <tr>
-        <td>{{ index["Name"] }}</td>
-        <td>{{ index["Age"] }}</td>
-        <td>{{ index["PhNum"] }}</td>
-        <td>{{ index["SecurityLevel"] }}</td>
-        <td>{{ index["LoginPassword"] }}</td>
-      </tr>
-      {% endfor %}
+        {% for entry in records %}
+            <tr>
+                <td>{{ entry['Name'] }}</td>
+                <td>{{ entry['Age'] }}</td>
+                <td>{{ entry['PhNum'] }}</td>
+                <td>{{ entry['SecurityLevel'] }}</td>
+                <td>{{ entry['LoginPassword'] }}</td>
+            </tr>
+        {% endfor %}
     </table>
 
     <h3><a href="/">Go back to homepage</a></h3>

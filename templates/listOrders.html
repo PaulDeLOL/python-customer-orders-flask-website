@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>List of Orders</title>
+</head>
+<body>
+    <h1>List of Orders</h1>
+
+    <table border=3>
+        <tr align="center">
+            <td>Order ID</td>
+            <td>Customer ID</td>
+            <td>Item SKU Number</td>
+            <td>Quantity</td>
+            <td>Price</td>
+            <td>Credit Card Number</td>
+        </tr>
+
+        {% for entry in records %}
+            <tr>
+                <td>{{ entry['OrderId'] }}</td>
+                <td>{{ entry['CustId'] }}</td>
+                <td>{{ entry['ItemSkewNum'] }}</td>
+                <td>{{ entry['Quantity'] }}</td>
+                <td>{{ entry['Price'] }}</td>
+                <td>{{ entry['CreditCardNum'] }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <h3><a href="/">Go back to homepage</a></h3>
+</body>
+</html>

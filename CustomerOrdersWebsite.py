@@ -17,13 +17,20 @@ def list_customers():
     cur = conn.cursor()
 
     cur.execute("SELECT * FROM Customers;")
-    customer_rows = cur.fetchall()
+    cust_rows = cur.fetchall()
 
-    return render_template("listCustomers.html", rows = customer_rows)
+    return render_template("listCustomers.html", records = cust_rows)
 
 @app.route('/listOrders')
 def list_orders():
-    return "Hello List Orders"
+    conn = sql.connect("CustOrders.db")
+    conn.row_factory = sql.Row
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM Orders;")
+    order_rows = cur.fetchall()
+
+    return render_template("listOrders.html", records = order_rows)
 
 if __name__ == "__main__":
     app.run(debug = True)
