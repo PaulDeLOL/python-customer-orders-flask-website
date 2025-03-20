@@ -1,11 +1,10 @@
 """
 Name: Pablo Guardia
-Date: 03/12/2025
-Assignment: Module 9: SQLite3 Database
-Due Date: 03/16/2025
-About this project: This script creates a SQLite3 table in a database called
-CustOrders.db, with the table being a set of customers with name, age,
-phone number, etc.
+Date: 03/19/2025
+Assignment: Module 10: Basic Flask Website
+Due Date: 03/23/2025
+About this project: This script is a unification of CustomerCreateDB.py and
+OrderCreateDB.py from Module 9's assignment.
 Assumptions: N/A
 All work below was performed by Pablo Guardia
 """
