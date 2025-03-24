@@ -14,7 +14,8 @@ Assumptions: N/A
 All work below was performed by Pablo Guardia
 """
 
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import (Flask, render_template, request,
+                   redirect, url_for, session, flash)
 import sqlite3 as sql
 import os
 
@@ -40,8 +41,8 @@ def login_check():
     if not session.get('logged_in'):
         if request.method == "POST":
             conn = sql.connect("CustOrders.db")
-            cur = conn.cursor()
             conn.row_factory = sql.Row
+            cur = conn.cursor()
 
             username = request.form.get('Username', "", str)
             password = request.form.get('Password', "", str)
@@ -203,6 +204,14 @@ def list_orders():
     else:
         flash("You must be logged in to access this page.")
         return redirect(url_for('login'))
+
+@app.route('/logout')
+def logout():
+    if session.get('logged_in'):
+        session.clear()
+        flash("You have been logged out.")
+
+    return redirect(url_for('login'))
 
 # Main driver function
 if __name__ == "__main__":

@@ -15,8 +15,24 @@
         {% endif %}
     {% endwith %}
 
-    <h1><a href="/newCustomer">Add New Customer</a></h1>
-    <h1><a href="/listCustomers">List Customers</a></h1>
-    <h1><a href="/listOrders">List Orders</a></h1>
+    <h1>Welcome, {{ session.get('username') }}!</h1>
+    {% if session.get('logged_in') %}
+        {% if session.get('security_level') >= 1 %}
+            <h3><a href="/">Show My Orders</a></h3>
+            <h3><a href="/">Add New Order</a></h3>
+            {% if session.get('security_level') == 1 %}
+                <h3><a href="/listCustomers">List Customers</a></h3>
+            {% endif %}
+        {% endif %}
+
+        {% if session.get('security_level') >= 2 %}
+            <h3><a href="/newCustomer">Add New Customer</a></h3>
+            {% if session.get('security_level') == 2 %}
+                <h3><a href="/listOrders">List Orders</a></h3>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+    <br>
+    <h2><a href="/logout">Log out</a></h2>
 </body>
 </html>
