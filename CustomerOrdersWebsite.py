@@ -20,7 +20,6 @@ import os
 
 app = Flask(__name__)
 
-# Home page
 @app.route('/')
 def index():
     if session.get('logged_in'):
@@ -54,9 +53,16 @@ def login_check():
 
             if check is not None:
                 session['logged_in'] = True
+
+                session['id'] = check['CustId']
+                session['username'] = check['Name']
+                session['age'] = check['Age']
+                session['number'] = check['PhNum']
                 session['security_level'] = check['SecurityLevel']
-                conn.close()
+                session['password'] = check['LoginPassword']
+
                 flash("Successfully logged in!!!")
+                conn.close()
                 return redirect(url_for('home'))
             else:
                 session['logged_in'] = False
@@ -70,6 +76,7 @@ def login_check():
         flash("You are already logged in. Click \"Log out\" to log out.")
         return redirect(url_for('home'))
 
+# Home page
 @app.route('/home')
 def home():
     if session.get('logged_in'):
