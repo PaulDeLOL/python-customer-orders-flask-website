@@ -5,6 +5,16 @@
     <title>New Customer Result</title>
 </head>
 <body>
+    {% with flashes = get_flashed_messages() %}
+        {% if flashes %}
+            <ul>
+            {% for flash_message in flashes %}
+                <li>{{ flash_message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
     {{ message }}
     {% for error in errors_table %}
         <br>

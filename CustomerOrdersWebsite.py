@@ -46,9 +46,10 @@ def login_check():
             username = request.form.get('Username', "", str)
             password = request.form.get('Password', "", str)
 
-            cur.execute('''SELECT * FROM Customers
-                WHERE Name == ? AND LoginPassword == ?''',
-                (username, password))
+            cur.execute('''
+                SELECT * FROM Customers
+                WHERE Name == ? AND LoginPassword == ?
+            ''', (username, password))
             check = cur.fetchone()
 
             if check is not None:
