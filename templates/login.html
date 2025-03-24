@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Customer Orders Homepage</title>
+    <title>Log in to your account</title>
 </head>
 <body>
     {% with messages = get_flashed_messages() %}
@@ -15,8 +15,13 @@
         {% endif %}
     {% endwith %}
 
-    <h1><a href="/newCustomer">Add New Customer</a></h1>
-    <h1><a href="/listCustomers">List Customers</a></h1>
-    <h1><a href="/listOrders">List Orders</a></h1>
+    <h1>Login</h1>
+    <form action="/loginCheck" method="POST">
+        <input type="text" name="Username" placeholder="Username">
+        <br>
+        <input type="password" name="Password" placeholder="Password">
+        <br><br>
+        <input type="submit" value="Log in">
+    </form>
 </body>
 </html>
