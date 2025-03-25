@@ -36,7 +36,7 @@ def login():
         flash("You are already logged in. Click \"Log out\" to log out.")
         return redirect(url_for('home'))
 
-@app.route('/loginCheck', methods=['POST', 'GET'])
+@app.route('/loginCheck', methods = ['POST', 'GET'])
 def login_check():
     if not session.get('logged_in'):
         if request.method == "POST":
@@ -72,7 +72,8 @@ def login_check():
                 conn.close()
                 return redirect(url_for('login'))
         else:
-            flash("Login error. Request method is not POST or user attempted to access /loginCheck illegally.")
+            flash("Login error. Request method is not POST.")
+            flash("User might have attempted to access /loginCheck illegally.")
             return redirect(url_for('login'))
     else:
         flash("You are already logged in. Click \"Log out\" to log out.")
@@ -97,7 +98,7 @@ def new_customer():
         return redirect(url_for('login'))
 
 # Page displaying the results of adding a new customer (or failing to do so!)
-@app.route('/newCustResult', methods=['POST', 'GET'])
+@app.route('/newCustResult', methods = ['POST', 'GET'])
 def new_cust_result():
     if session.get('logged_in'):
         if request.method == 'POST':
@@ -150,19 +151,19 @@ def new_cust_result():
                     # If something went wrong, display the exception
                     conn.rollback()
                     msg = f"Error creating a new customer: {excpt}"
-                    print(msg)
-                    return render_template("newCustResult.html", message = msg, errors_table = [])
+                    return render_template("formResults.html", message = msg, errors_table = [])
                 finally:
                     conn.close()
-                    return render_template("newCustResult.html", message = msg, errors_table = [])
+                    return render_template("formResults.html", message = msg, errors_table = [])
             # Otherwise, if err_table contains errors, display them all on the results page
             else:
                 msg = "Error creating a new customer:"
-                return render_template("newCustResult.html", message = msg, errors_table = err_table)
+                return render_template("formResults.html", message = msg, errors_table = err_table)
         # If the method was somehow not POST, address that and display an error
         else:
-            msg = "Error creating a new customer: Request method is not POST or user attempted to access /newCustResult incorrectly."
-            return render_template("newCustResult.html", message = msg, errors_table = [])
+            msg = "Error creating a new customer: Request method is not POST."
+            msg += " User attempted to access /newCustResult incorrectly."
+            return render_template("formResults.html", message = msg, errors_table = [])
     else:
         flash("You must be logged in to access this page.")
         return redirect(url_for('login'))
@@ -182,6 +183,72 @@ def list_customers():
         conn.close()
 
         return render_template("listCustomers.html", records = cust_rows)
+    else:
+        flash("You must be logged in to access this page.")
+        return redirect(url_for('login'))
+
+@app.route('/newOrder')
+def new_order():
+    if session.get('logged_in'):
+        return render_template("newOrder.html")
+    else:
+        flash("You must be logged in to access this page.")
+        return redirect(url_for('login'))
+
+@app.route('/newOrderResult', methods = ['POST', 'GET'])
+def new_order_result():
+    if session.get('logged_in'):
+        if request.method == 'POST':
+            err_table = []
+
+            new_cust_id = session.get('id')
+            new_sku_num = request.form.get('SKUNum', "", str)
+            new_quantity = request.form.get('Quantity', -1, int)
+            new_price = request.form.get('Price', -1.0, float)
+            new_card_num = request.form.get('CardNum', "", str)
+
+            if new_sku_num is None or new_sku_num.strip() == "":
+                err_table.append("Can't place new order; 'Item SKU Number' field is blank or invalid")
+
+            if new_quantity is None or new_quantity == -1:
+                err_table.append("Can't place new order; 'Quantity' field is blank or invalid")
+            elif new_quantity <= 0:
+                err_table.append("Can't place new order; 'Quantity' must be greater than 0")
+
+            if new_price is None or new_price == -1.0:
+                err_table.append("Can't place new order; 'Price' field is blank or invalid")
+            elif new_price <= 0.0:
+                err_table.append("Can't place new order; 'Price' must be greater than 0")
+
+            if new_card_num is None or new_card_num.strip() == "":
+                err_table.append("Can't place new order; 'Credit Card Number' field is blank or invalid")
+
+            if len(err_table) == 0:
+                try:
+                    conn = sql.connect("CustOrders.db")
+                    cur = conn.cursor()
+
+                    cur.execute('''
+                        INSERT INTO Orders (CustId, ItemSkewNum, Quantity, Price, CreditCardNum)
+                        VALUES (?, ?, ?, ?, ?);
+                    ''', (new_cust_id, new_sku_num, new_quantity, new_price, new_card_num))
+
+                    conn.commit()
+                    msg = "Order successfully placed!"
+                except Exception as excpt:
+                    conn.rollback()
+                    msg = f"Error placing new order: {excpt}"
+                    return render_template("formResults.html", message = msg, errors_table = [])
+                finally:
+                    conn.close()
+                    return render_template("formResults.html", message = msg, errors_table = [])
+            else:
+                msg = "Error placing new order:"
+                return render_template("formResults.html", message = msg, errors_table = err_table)
+        else:
+            msg = "Error placing new order: Request method is not POST."
+            msg += " User might have attempted to access /newOrderResult incorrectly."
+            return render_template("formResults.html", message = msg, errors_table = [])
     else:
         flash("You must be logged in to access this page.")
         return redirect(url_for('login'))

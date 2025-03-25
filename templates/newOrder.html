@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Add a New Customer!</title>
+    <title>Place a New Order!</title>
 </head>
 <body>
     {% with messages = get_flashed_messages() %}
@@ -15,28 +15,24 @@
         {% endif %}
     {% endwith %}
 
-    <h1>Add a New Customer!</h1>
+    <h1>Order Information</h1>
     <br>
 
-    <form action="/newCustResult" method="POST">
-        <b>Name:</b><br>
-        <input type="text" name="Name">
+    <form action="/newOrderResult" method="POST">
+        <b>Item SKU Number:</b><br>
+        <input type="text" name="SKUNum">
         <br><br>
 
-        <b>Age:</b><br>
-        <input type="text" name="Age">
+        <b>Quantity:</b><br>
+        <input type="text" name="Quantity">
         <br><br>
 
-        <b>Phone Number:</b><br>
-        <input type="text" name="Number">
+        <b>Price:</b><br>
+        <input type="text" name="Price">
         <br><br>
 
-        <b>Security Level:</b><br>
-        <input type="text" name="SecurLevel">
-        <br><br>
-
-        <b>Login Password:</b><br>
-        <input type="password" name="Password">
+        <b>Credit Card Number:</b><br>
+        <input type="text" name="CardNum">
         <br><br>
 
         <input type="submit" value="Submit">

@@ -8,18 +8,18 @@
     {% with messages = get_flashed_messages() %}
         {% if messages %}
             <ul>
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
             </ul>
         {% endif %}
     {% endwith %}
 
-    <h1>Welcome, {{ session.get('username') }}!</h1>
     {% if session.get('logged_in') %}
+    <h1>Welcome, {{ session.get('username') }}!</h1>
         {% if session.get('security_level') >= 1 %}
             <h3><a href="/">Show My Orders</a></h3>
-            <h3><a href="/">Add New Order</a></h3>
+            <h3><a href="/newOrder">Add New Order</a></h3>
             {% if session.get('security_level') == 1 %}
                 <h3><a href="/listCustomers">List Customers</a></h3>
             {% endif %}
@@ -31,8 +31,8 @@
                 <h3><a href="/listOrders">List Orders</a></h3>
             {% endif %}
         {% endif %}
-    {% endif %}
     <br>
+    {% endif %}
     <h2><a href="/logout">Log out</a></h2>
 </body>
 </html>

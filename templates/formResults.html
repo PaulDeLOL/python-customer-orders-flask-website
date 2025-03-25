@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>New Customer Result</title>
+    <title>Form Results</title>
 </head>
 <body>
     {% with flashes = get_flashed_messages() %}
         {% if flashes %}
             <ul>
-            {% for flash_message in flashes %}
-                <li>{{ flash_message }}</li>
-            {% endfor %}
+                {% for flash_message in flashes %}
+                    <li>{{ flash_message }}</li>
+                {% endfor %}
             </ul>
         {% endif %}
     {% endwith %}
