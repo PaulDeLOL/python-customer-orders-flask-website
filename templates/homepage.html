@@ -17,19 +17,20 @@
 
     {% if session.get('logged_in') %}
     <h1>Welcome, {{ session.get('username') }}!</h1>
-        {% if session.get('security_level') >= 1 %}
-            <h3><a href="/">Show My Orders</a></h3>
-            <h3><a href="/newOrder">Add New Order</a></h3>
-            {% if session.get('security_level') == 1 %}
-                <h3><a href="/listCustomers">List Customers</a></h3>
-            {% endif %}
-        {% endif %}
+        <h3><a href="/">Show My Orders</a></h3>
 
         {% if session.get('security_level') >= 2 %}
             <h3><a href="/newCustomer">Add New Customer</a></h3>
-            {% if session.get('security_level') == 2 %}
-                <h3><a href="/listOrders">List Orders</a></h3>
-            {% endif %}
+        {% endif %}
+
+        <h3><a href="/newOrder">Add New Order</a></h3>
+
+        {% if session.get('security_level') == 1 %}
+            <h3><a href="/listCustomers">List Customers</a></h3>
+        {% endif %}
+
+        {% if session.get('security_level') == 2 %}
+            <h3><a href="/listOrders">List Orders</a></h3>
         {% endif %}
     <br>
     {% endif %}
