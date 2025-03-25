@@ -1,15 +1,23 @@
 """
 Name: Pablo Guardia
-Date: 03/19/2025
-Assignment: Module 10: Basic Flask Website
-Due Date: 03/23/2025
+Date: 03/22/2025
+Assignment: Module 11: Role Based Access Control
+Due Date: 03/30/2025
+
 About this project: This script is a basic website written in Flask that
-contains 5 pages total. It can perform 3 functions:
-- Add a new customer to a database by filling out a form.
-- List the customers currently stored in the database.
-- List the customer orders currently stored in the database.
-The other 2 pages are for displaying the 3 options and the result of adding
-a record to the Customers table, displaying errors if necessary.
+allows users to manage customers and the ordering of items from a hypothetical
+database. Each user has a set security level that gives them different
+privileges, enabling role-based access control.
+
+Update 1.1:
+- Added role-based access control based on security levels, done via a new
+login.html page, its corresponding Flask function, the addition of session
+variables like "logged_in", and the checking of correct security levels.
+- Added newOrder.html and its corresponding Flask function, which allows
+users to place new orders which are added to the database.
+- Added listUserOrders.html and its corresponding Flask function, which
+lists all orders placed by the user currently logged in.
+
 Assumptions: N/A
 All work below was performed by Pablo Guardia
 """
@@ -21,21 +29,34 @@ import os
 
 app = Flask(__name__)
 
+"""
+Nearly all functions now have login checks, which check if there's a user
+logged into the website who can therefore access the internal pages. Also,
+certain pages can now only be accessed by users with the correct security
+level, so functionality has been changed slightly to perform said checks.
+"""
+
+# Index function
 @app.route('/')
 def index():
+    # Redirects to home if user is logged in, login if not
     if session.get('logged_in'):
         return redirect(url_for("home"))
     else:
         return redirect(url_for("login"))
 
+# Login page
 @app.route('/login')
 def login():
     if not session.get('logged_in'):
         return render_template("login.html")
+    # If the user was already logged in, redirect them to the homepage and
+    # prompt them to click "Log out" if they really want to log in again
     else:
         flash("You are already logged in. Click \"Log out\" to log out.")
         return redirect(url_for("home"))
 
+# Login check function that checks if the user exists in the database
 @app.route('/loginCheck', methods = ['POST', 'GET'])
 def login_check():
     if not session.get('logged_in'):
@@ -44,15 +65,19 @@ def login_check():
             conn.row_factory = sql.Row
             cur = conn.cursor()
 
+            # Takes in the user's input from the form
             username = request.form.get('Username', "", str)
             password = request.form.get('Password', "", str)
 
+            # Checks if there is a record in the database matching the username and password
             cur.execute('''
                 SELECT * FROM Customers
                 WHERE Name == ? AND LoginPassword == ?;
             ''', (username, password))
             check = cur.fetchone()
 
+            # If there is such a record, create session variables based on the user's data
+            # Signal to the Flask website that the user is logged in with another session variable
             if check is not None:
                 session['logged_in'] = True
 
@@ -66,15 +91,20 @@ def login_check():
                 flash("Successfully logged in!!!")
                 conn.close()
                 return redirect(url_for("home"))
+
+            # Prompt the user to try again if the username or password are invalid
             else:
                 session['logged_in'] = False
                 flash("Login failed. Invalid username or password.")
                 conn.close()
                 return redirect(url_for("login"))
+        # If the method was somehow not POST, redirect to the login page
         else:
             flash("Login error. Request method is not POST.")
             flash("User might have attempted to access /loginCheck illegally.")
             return redirect(url_for("login"))
+    # If the user was already logged in, redirect them to the homepage and
+    # prompt them to click "Log out" if they really want to log in again
     else:
         flash("You are already logged in. Click \"Log out\" to log out.")
         return redirect(url_for("home"))
@@ -88,9 +118,12 @@ def home():
         flash("You must be logged in to access this page.")
         return redirect(url_for("login"))
 
+# Page that lists all orders placed by the current user in the session
 @app.route('/listUserOrders')
 def list_user_orders():
     if session.get('logged_in'):
+        # Displays the orders using sql.Row objects
+        # This allows name indexing in the HTML page
         conn = sql.connect("CustOrders.db")
         conn.row_factory = sql.Row
         cur = conn.cursor()
@@ -109,6 +142,8 @@ def list_user_orders():
 def new_customer():
     if session.get('logged_in') and session.get('security_level') >= 2:
         return render_template("newCustomer.html")
+    # Redirect the user to a "Not Found" page if their security level is invalid,
+    # or back to the login page if they were not logged in at all
     elif session.get('security_level') < 2:
         return redirect("/notFound")
     elif not session.get('logged_in'):
@@ -184,6 +219,7 @@ def new_cust_result():
             msg = "Error creating a new customer: Request method is not POST."
             msg += " User attempted to access /newCustResult incorrectly."
             return render_template("formResults.html", message = msg, errors_table = [])
+    # If the user was not logged in, redirect them to the login page with an error
     else:
         flash("You must be logged in to access this page.")
         return redirect(url_for("login"))
@@ -203,6 +239,8 @@ def list_customers():
         conn.close()
 
         return render_template("listCustomers.html", records = cust_rows)
+    # Redirect the user to a "Not Found" page if their security level is invalid,
+    # or back to the login page if they were not logged in at all
     elif session.get('security_level') != 1:
         return redirect("/notFound")
     elif not session.get('logged_in'):
@@ -211,6 +249,8 @@ def list_customers():
     else:
         return redirect("/notFound")
 
+# Page containing a form to let the user place a new order
+# Said order is added to the database
 @app.route('/newOrder')
 def new_order():
     if session.get('logged_in'):
@@ -219,18 +259,23 @@ def new_order():
         flash("You must be logged in to access this page.")
         return redirect(url_for("login"))
 
+# Page displaying the results of placing a new order (or failing to do so!)
 @app.route('/newOrderResult', methods = ['POST', 'GET'])
 def new_order_result():
     if session.get('logged_in'):
         if request.method == 'POST':
+            # Stores error messages in a table
             err_table = []
 
+            # Obtains the fields from the form filled out
             new_cust_id = session.get('id')
             new_sku_num = request.form.get('SKUNum', "", str)
             new_quantity = request.form.get('Quantity', -1, int)
             new_price = request.form.get('Price', -1.0, float)
             new_card_num = request.form.get('CardNum', "", str)
 
+            # Validates input according to constraints defined in assignment instructions
+            # Examples: No empty strings, quantity greater than 0, etc.
             if new_sku_num is None or new_sku_num.strip() == "":
                 err_table.append("Can't place new order; 'Item SKU Number' field is blank or invalid")
 
@@ -247,8 +292,10 @@ def new_order_result():
             if new_card_num is None or new_card_num.strip() == "":
                 err_table.append("Can't place new order; 'Credit Card Number' field is blank or invalid")
 
+            # If err_table has no elements, meaning no errors occurred...
             if len(err_table) == 0:
                 try:
+                    # Try inserting the new record into the database.
                     conn = sql.connect("CustOrders.db")
                     cur = conn.cursor()
 
@@ -260,19 +307,23 @@ def new_order_result():
                     conn.commit()
                     msg = "Order successfully placed!"
                 except Exception as excpt:
+                    # If something went wrong, display the exception
                     conn.rollback()
                     msg = f"Error placing new order: {excpt}"
                     return render_template("formResults.html", message = msg, errors_table = [])
                 finally:
                     conn.close()
                     return render_template("formResults.html", message = msg, errors_table = [])
+            # Otherwise, if err_table contains errors, display them all on the results page
             else:
                 msg = "Error placing new order:"
                 return render_template("formResults.html", message = msg, errors_table = err_table)
+        # If the method was somehow not POST, address that and display an error
         else:
             msg = "Error placing new order: Request method is not POST."
             msg += " User might have attempted to access /newOrderResult incorrectly."
             return render_template("formResults.html", message = msg, errors_table = [])
+    # If the user was not logged in, redirect them to the login page with an error
     else:
         flash("You must be logged in to access this page.")
         return redirect(url_for("login"))
@@ -292,6 +343,8 @@ def list_orders():
         conn.close()
 
         return render_template("listOrders.html", records = order_rows)
+    # Redirect the user to a "Not Found" page if their security level is invalid,
+    # or back to the login page if they were not logged in at all
     elif session.get('security_level') != 2:
         return redirect("/notFound")
     elif not session.get('logged_in'):
@@ -300,6 +353,7 @@ def list_orders():
     else:
         return redirect("/notFound")
 
+# Logs the user out while clearing all session variables
 @app.route('/logout')
 def logout():
     if session.get('logged_in'):
