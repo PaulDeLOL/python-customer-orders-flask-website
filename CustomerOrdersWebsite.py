@@ -24,9 +24,9 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     if session.get('logged_in'):
-        return redirect(url_for('home'))
+        return redirect(url_for("home"))
     else:
-        return redirect(url_for('login'))
+        return redirect(url_for("login"))
 
 @app.route('/login')
 def login():
@@ -34,7 +34,7 @@ def login():
         return render_template("login.html")
     else:
         flash("You are already logged in. Click \"Log out\" to log out.")
-        return redirect(url_for('home'))
+        return redirect(url_for("home"))
 
 @app.route('/loginCheck', methods = ['POST', 'GET'])
 def login_check():
@@ -49,7 +49,7 @@ def login_check():
 
             cur.execute('''
                 SELECT * FROM Customers
-                WHERE Name == ? AND LoginPassword == ?
+                WHERE Name == ? AND LoginPassword == ?;
             ''', (username, password))
             check = cur.fetchone()
 
@@ -65,19 +65,19 @@ def login_check():
 
                 flash("Successfully logged in!!!")
                 conn.close()
-                return redirect(url_for('home'))
+                return redirect(url_for("home"))
             else:
                 session['logged_in'] = False
                 flash("Login failed. Invalid username or password.")
                 conn.close()
-                return redirect(url_for('login'))
+                return redirect(url_for("login"))
         else:
             flash("Login error. Request method is not POST.")
             flash("User might have attempted to access /loginCheck illegally.")
-            return redirect(url_for('login'))
+            return redirect(url_for("login"))
     else:
         flash("You are already logged in. Click \"Log out\" to log out.")
-        return redirect(url_for('home'))
+        return redirect(url_for("home"))
 
 # Home page
 @app.route('/home')
@@ -86,7 +86,23 @@ def home():
         return render_template("homepage.html")
     else:
         flash("You must be logged in to access this page.")
-        return redirect(url_for('login'))
+        return redirect(url_for("login"))
+
+@app.route('/listUserOrders')
+def list_user_orders():
+    if session.get('logged_in'):
+        conn = sql.connect("CustOrders.db")
+        conn.row_factory = sql.Row
+        cur = conn.cursor()
+
+        cur.execute('''SELECT * FROM Orders WHERE CustId == ?;''', (session['id'],))
+        user_order_rows = cur.fetchall()
+        conn.close()
+
+        return render_template("listUserOrders.html", records = user_order_rows)
+    else:
+        flash("You must be logged in to access this page.")
+        return redirect(url_for("login"))
 
 # Page containing a form to add a new customer to the database
 @app.route('/newCustomer')
@@ -94,12 +110,12 @@ def new_customer():
     if session.get('logged_in') and session.get('security_level') >= 2:
         return render_template("newCustomer.html")
     elif session.get('security_level') < 2:
-        redirect(url_for('invalid'))
+        return redirect("/notFound")
     elif not session.get('logged_in'):
         flash("You must be logged in to access this page.")
-        return redirect(url_for('login'))
+        return redirect(url_for("login"))
     else:
-        redirect(url_for('invalid'))
+        return redirect("/notFound")
 
 # Page displaying the results of adding a new customer (or failing to do so!)
 @app.route('/newCustResult', methods = ['POST', 'GET'])
@@ -170,7 +186,7 @@ def new_cust_result():
             return render_template("formResults.html", message = msg, errors_table = [])
     else:
         flash("You must be logged in to access this page.")
-        return redirect(url_for('login'))
+        return redirect(url_for("login"))
 
 # Page listing the customers stored in the database
 @app.route('/listCustomers')
@@ -182,18 +198,18 @@ def list_customers():
         conn.row_factory = sql.Row
         cur = conn.cursor()
 
-        cur.execute("SELECT * FROM Customers;")
+        cur.execute('''SELECT * FROM Customers;''')
         cust_rows = cur.fetchall()
         conn.close()
 
         return render_template("listCustomers.html", records = cust_rows)
     elif session.get('security_level') != 1:
-        redirect(url_for('invalid'))
+        return redirect("/notFound")
     elif not session.get('logged_in'):
         flash("You must be logged in to access this page.")
-        return redirect(url_for('login'))
+        return redirect(url_for("login"))
     else:
-        redirect(url_for('invalid'))
+        return redirect("/notFound")
 
 @app.route('/newOrder')
 def new_order():
@@ -201,7 +217,7 @@ def new_order():
         return render_template("newOrder.html")
     else:
         flash("You must be logged in to access this page.")
-        return redirect(url_for('login'))
+        return redirect(url_for("login"))
 
 @app.route('/newOrderResult', methods = ['POST', 'GET'])
 def new_order_result():
@@ -259,7 +275,7 @@ def new_order_result():
             return render_template("formResults.html", message = msg, errors_table = [])
     else:
         flash("You must be logged in to access this page.")
-        return redirect(url_for('login'))
+        return redirect(url_for("login"))
 
 # Page listing the customer orders stored in the database
 @app.route('/listOrders')
@@ -271,18 +287,18 @@ def list_orders():
         conn.row_factory = sql.Row
         cur = conn.cursor()
 
-        cur.execute("SELECT * FROM Orders;")
+        cur.execute('''SELECT * FROM Orders;''')
         order_rows = cur.fetchall()
         conn.close()
 
         return render_template("listOrders.html", records = order_rows)
     elif session.get('security_level') != 2:
-        redirect(url_for('invalid'))
+        return redirect("/notFound")
     elif not session.get('logged_in'):
         flash("You must be logged in to access this page.")
-        return redirect(url_for('login'))
+        return redirect(url_for("login"))
     else:
-        redirect(url_for('invalid'))
+        return redirect("/notFound")
 
 @app.route('/logout')
 def logout():
@@ -290,7 +306,7 @@ def logout():
         session.clear()
         flash("You have been logged out.")
 
-    return redirect(url_for('login'))
+    return redirect(url_for("login"))
 
 # Main driver function
 if __name__ == "__main__":

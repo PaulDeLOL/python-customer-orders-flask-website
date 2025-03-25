@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ session.get('username') }}'s Orders</title>
+</head>
+<body>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    {% if session.get('logged_in') %}
+        <h1>{{ session.get('username') }}'s Orders</h1>
+
+        <table border=3>
+            <tr align="center">
+                <td>Order ID</td>
+                <td>Customer ID</td>
+                <td>Item SKU Number</td>
+                <td>Quantity</td>
+                <td>Price</td>
+                <td>Credit Card Number</td>
+            </tr>
+
+            {% for entry in records %}
+                <tr>
+                    <td>{{ entry['OrderId'] }}</td>
+                    <td>{{ entry['CustId'] }}</td>
+                    <td>{{ entry['ItemSkewNum'] }}</td>
+                    <td>{{ entry['Quantity'] }}</td>
+                    <td>{{ entry['Price'] }}</td>
+                    <td>{{ entry['CreditCardNum'] }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        <h3><a href="/">Go back to homepage</a></h3>
+    {% elif not session.get('logged_in') %}
+        <h2>You must be logged in to access this page...</h2>
+        <h3><a href="/login">Go to login page</a></h3>
+    {% else %}
+        <h1>Not Found</h1>
+        The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+    {% endif %}
+</body>
+</html>
