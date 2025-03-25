@@ -91,11 +91,15 @@ def home():
 # Page containing a form to add a new customer to the database
 @app.route('/newCustomer')
 def new_customer():
-    if session.get('logged_in'):
+    if session.get('logged_in') and session.get('security_level') >= 2:
         return render_template("newCustomer.html")
-    else:
+    elif session.get('security_level') < 2:
+        redirect(url_for('invalid'))
+    elif not session.get('logged_in'):
         flash("You must be logged in to access this page.")
         return redirect(url_for('login'))
+    else:
+        redirect(url_for('invalid'))
 
 # Page displaying the results of adding a new customer (or failing to do so!)
 @app.route('/newCustResult', methods = ['POST', 'GET'])
@@ -171,7 +175,7 @@ def new_cust_result():
 # Page listing the customers stored in the database
 @app.route('/listCustomers')
 def list_customers():
-    if session.get('logged_in'):
+    if session.get('logged_in') and session.get('security_level') == 1:
         # Displays the customers using sql.Row objects
         # This allows name indexing in the HTML page
         conn = sql.connect("CustOrders.db")
@@ -183,9 +187,13 @@ def list_customers():
         conn.close()
 
         return render_template("listCustomers.html", records = cust_rows)
-    else:
+    elif session.get('security_level') != 1:
+        redirect(url_for('invalid'))
+    elif not session.get('logged_in'):
         flash("You must be logged in to access this page.")
         return redirect(url_for('login'))
+    else:
+        redirect(url_for('invalid'))
 
 @app.route('/newOrder')
 def new_order():
@@ -256,7 +264,7 @@ def new_order_result():
 # Page listing the customer orders stored in the database
 @app.route('/listOrders')
 def list_orders():
-    if session.get('logged_in'):
+    if session.get('logged_in') and session.get('security_level') == 2:
         # Displays the orders using sql.Row objects
         # This allows name indexing in the HTML page
         conn = sql.connect("CustOrders.db")
@@ -268,9 +276,13 @@ def list_orders():
         conn.close()
 
         return render_template("listOrders.html", records = order_rows)
-    else:
+    elif session.get('security_level') != 2:
+        redirect(url_for('invalid'))
+    elif not session.get('logged_in'):
         flash("You must be logged in to access this page.")
         return redirect(url_for('login'))
+    else:
+        redirect(url_for('invalid'))
 
 @app.route('/logout')
 def logout():
