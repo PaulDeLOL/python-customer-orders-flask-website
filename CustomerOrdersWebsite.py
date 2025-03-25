@@ -362,6 +362,14 @@ def logout():
 
     return redirect(url_for("login"))
 
+@app.route('/logout')
+def logout():
+    if session.get('logged_in'):
+        session.clear()
+        flash("You have been logged out.")
+
+    return redirect(url_for('login'))
+
 # Main driver function
 if __name__ == "__main__":
     app.secret_key = os.urandom(12)
