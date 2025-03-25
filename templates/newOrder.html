@@ -15,30 +15,38 @@
         {% endif %}
     {% endwith %}
 
-    <h1>Order Information</h1>
-    <br>
+    {% if session.get('logged_in') %}
+        <h1>Order Information</h1>
+        <br>
 
-    <form action="/newOrderResult" method="POST">
-        <b>Item SKU Number:</b><br>
-        <input type="text" name="SKUNum">
-        <br><br>
+        <form action="/newOrderResult" method="POST">
+            <b>Item SKU Number:</b><br>
+            <input type="text" name="SKUNum">
+            <br><br>
 
-        <b>Quantity:</b><br>
-        <input type="text" name="Quantity">
-        <br><br>
+            <b>Quantity:</b><br>
+            <input type="text" name="Quantity">
+            <br><br>
 
-        <b>Price:</b><br>
-        <input type="text" name="Price">
-        <br><br>
+            <b>Price:</b><br>
+            <input type="text" name="Price">
+            <br><br>
 
-        <b>Credit Card Number:</b><br>
-        <input type="text" name="CardNum">
-        <br><br>
+            <b>Credit Card Number:</b><br>
+            <input type="text" name="CardNum">
+            <br><br>
 
-        <input type="submit" value="Submit">
-        <br><br>
-    </form>
+            <input type="submit" value="Submit">
+            <br><br>
+        </form>
 
-    <h3><a href="/">Go back to homepage</a></h3>
+        <h3><a href="/">Go back to homepage</a></h3>
+    {% elif not session.get('logged_in') %}
+        <h2>You must be logged in to access this page...</h2>
+        <h3><a href="/login">Go to login page</a></h3>
+    {% else %}
+        <h1>Not Found</h1>
+        The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+    {% endif %}
 </body>
 </html>

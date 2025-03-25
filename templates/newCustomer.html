@@ -15,34 +15,45 @@
         {% endif %}
     {% endwith %}
 
-    <h1>Add a New Customer!</h1>
-    <br>
+    {% if session.get('logged_in') and session.get('security_level') >= 2 %}
+        <h1>Add a New Customer!</h1>
+        <br>
 
-    <form action="/newCustResult" method="POST">
-        <b>Name:</b><br>
-        <input type="text" name="Name">
-        <br><br>
+        <form action="/newCustResult" method="POST">
+            <b>Name:</b><br>
+            <input type="text" name="Name">
+            <br><br>
 
-        <b>Age:</b><br>
-        <input type="text" name="Age">
-        <br><br>
+            <b>Age:</b><br>
+            <input type="text" name="Age">
+            <br><br>
 
-        <b>Phone Number:</b><br>
-        <input type="text" name="Number">
-        <br><br>
+            <b>Phone Number:</b><br>
+            <input type="text" name="Number">
+            <br><br>
 
-        <b>Security Level:</b><br>
-        <input type="text" name="SecurLevel">
-        <br><br>
+            <b>Security Level:</b><br>
+            <input type="text" name="SecurLevel">
+            <br><br>
 
-        <b>Login Password:</b><br>
-        <input type="password" name="Password">
-        <br><br>
+            <b>Login Password:</b><br>
+            <input type="password" name="Password">
+            <br><br>
 
-        <input type="submit" value="Submit">
-        <br><br>
-    </form>
+            <input type="submit" value="Submit">
+            <br><br>
+        </form>
 
-    <h3><a href="/">Go back to homepage</a></h3>
+        <h3><a href="/">Go back to homepage</a></h3>
+    {% elif not session.get('logged_in') %}
+        <h2>You must be logged in to access this page...</h2>
+        <h3><a href="/login">Go to login page</a></h3>
+    {% elif session.get('security_level') < 2 %}
+        <h2>Cannot access this page. Your security level is too low...</h2>
+        <h3><a href="/home">Go back to homepage</a></h3>
+    {% else %}
+        <h1>Not Found</h1>
+        The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+    {% endif %}
 </body>
 </html>

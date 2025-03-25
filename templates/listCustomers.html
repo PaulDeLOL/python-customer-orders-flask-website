@@ -15,28 +15,39 @@
         {% endif %}
     {% endwith %}
 
-    <h1>List of Customers</h1>
+    {% if session.get('logged_in') and session.get('security_level') == 1 %}
+        <h1>List of Customers</h1>
 
-    <table border=3>
-        <tr align="center">
-            <td>Name</td>
-            <td width=40>Age</td>
-            <td>Phone Number</td>
-            <td>Security Level</td>
-            <td>Login Password</td>
-        </tr>
-
-        {% for entry in records %}
-            <tr>
-                <td>{{ entry['Name'] }}</td>
-                <td>{{ entry['Age'] }}</td>
-                <td>{{ entry['PhNum'] }}</td>
-                <td>{{ entry['SecurityLevel'] }}</td>
-                <td>{{ entry['LoginPassword'] }}</td>
+        <table border=3>
+            <tr align="center">
+                <td>Name</td>
+                <td width=40>Age</td>
+                <td>Phone Number</td>
+                <td>Security Level</td>
+                <td>Login Password</td>
             </tr>
-        {% endfor %}
-    </table>
 
-    <h3><a href="/">Go back to homepage</a></h3>
+            {% for entry in records %}
+                <tr>
+                    <td>{{ entry['Name'] }}</td>
+                    <td>{{ entry['Age'] }}</td>
+                    <td>{{ entry['PhNum'] }}</td>
+                    <td>{{ entry['SecurityLevel'] }}</td>
+                    <td>{{ entry['LoginPassword'] }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        <h3><a href="/">Go back to homepage</a></h3>
+    {% elif not session.get('logged_in') %}
+        <h2>You must be logged in to access this page...</h2>
+        <h3><a href="/login">Go to login page</a></h3>
+    {% elif session.get('security_level') != 1 %}
+        <h2>Cannot access this page. Your security level is not valid...</h2>
+        <h3><a href="/home">Go back to homepage</a></h3>
+    {% else %}
+        <h1>Not Found</h1>
+        The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+    {% endif %}
 </body>
 </html>
