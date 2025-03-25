@@ -15,6 +15,10 @@
         {% endif %}
     {% endwith %}
 
+    {% if not session.get('logged_in') %}
+        <h2>Error: User is not logged in...</h2>
+    {% endif %}
+
     {% if session.get('logged_in') %}
     <h1>Welcome, {{ session.get('username') }}!</h1>
         <h3><a href="/">Show My Orders</a></h3>
