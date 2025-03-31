@@ -10,7 +10,7 @@ All work below was performed by Pablo Guardia
 """
 
 import sqlite3
-import CustomerOrdersEncryption
+from CustomerOrdersEncryption import cipher
 
 
 # Connect to CustOrders.db file, creating it if it doesn't already exist
@@ -49,41 +49,47 @@ CREATE TABLE IF NOT EXISTS Orders (
 );
 ''')
 conn.commit()
-print("Orders table created!!\n")
+print("Orders table created!!")
 
 
 # Add a few records to the tables
 customers = [
-    ('Bethany Garner', 34, '5123-6789', 1, 'bethanyPass423'),
-    ('Kohei Yamashita', 65, '5555-9101', 2, 'XZ_yaMaSHita89_ZX'),
-    ('Andrés de la Cruz', 29, '1122-6412', 1, '971cocoSecure###'),
-    ('Kang Si-woo', 20, '3873-9292', 3, 'hwuen817@&*!&nwk13')
+    (cipher.encrypt('Bethany Garner'), 34, cipher.encrypt('5123-6789'), 1,
+    cipher.encrypt('garnerPass')),
+    (cipher.encrypt('Kohei Yamashita'), 65, cipher.encrypt('5555-9101'), 2,
+     cipher.encrypt('koheiPass')),
+    (cipher.encrypt('Andres de la Cruz'), 29, cipher.encrypt('1122-6412'), 1,
+     cipher.encrypt('andresPass')),
+    (cipher.encrypt('Kang Si-woo'), 20, cipher.encrypt('3873-9292'), 3,
+     cipher.encrypt('kangPass')),
+    (cipher.encrypt('Josh Chen'), 27, cipher.encrypt('1892-9823'), 2,
+     cipher.encrypt('joshPass')),
+    (cipher.encrypt('Cathleen Rogers'), 58, cipher.encrypt('2091-3829'), 1,
+     cipher.encrypt('cathleenPass'))
 ]
 cur.executemany('''
     INSERT INTO Customers (Name, Age, PhNum, SecurityLevel, LoginPassword)
     VALUES (?, ?, ?, ?, ?);
 ''', customers)
 conn.commit()
-print("Records added to Customers table")
+print("\nRecords added to Customers table")
+for row in cur.execute('''SELECT * FROM Customers;'''):
+    print(row)
 
 orders = [
-    (4, '111-22-1111', 10, 9.99, '4589 2244 8998 7111'),
-    (2, '3498-77-54564', 20, 14.99, '6742 3123 3332 2276'),
-    (2, '111-22-3498', 57, 249.99, '6876 3453 4589 1444'),
-    (3, '77-1111-54564', 34, 69.99, '8888 8959 6801 4923')
+    (4, '111-22-1111', 10, 9.99, cipher.encrypt('4589 2244 8998 7111')),
+    (2, '3498-77-54564', 20, 14.99, cipher.encrypt('6742 3123 3332 2276')),
+    (2, '111-22-3498', 57, 249.99, cipher.encrypt('6876 3453 4589 1444')),
+    (3, '77-1111-54564', 34, 69.99, cipher.encrypt('8888 8959 6801 4923')),
+    (6, '829-19098-19', 100, 4.99, cipher.encrypt('9812 9081 0891 2734')),
+    (1, '0928-2908-12', 5, 1749.99, cipher.encrypt('1920 0029 1387 4087'))
 ]
 cur.executemany('''
     INSERT INTO Orders (CustId, ItemSkewNum, Quantity, Price, CreditCardNum)
     VALUES (?, ?, ?, ?, ?);
 ''', orders)
 conn.commit()
-print("Records added to Orders table\n")
-
-
-# Print all records to the terminal
-for row in cur.execute('''SELECT * FROM Customers;'''):
-    print(row)
-print()
+print("\nRecords added to Orders table")
 for row in cur.execute('''SELECT * FROM Orders;'''):
     print(row)
 
