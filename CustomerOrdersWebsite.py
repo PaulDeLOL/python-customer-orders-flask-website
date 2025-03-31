@@ -26,6 +26,7 @@ from flask import (Flask, render_template, request,
                    redirect, url_for, session, flash)
 import sqlite3 as sql
 import os
+import CustomerOrdersEncryption
 
 app = Flask(__name__)
 

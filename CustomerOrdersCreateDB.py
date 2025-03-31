@@ -10,6 +10,8 @@ All work below was performed by Pablo Guardia
 """
 
 import sqlite3
+import CustomerOrdersEncryption
+
 
 # Connect to CustOrders.db file, creating it if it doesn't already exist
 conn = sqlite3.connect('CustOrders.db')
