@@ -1,10 +1,17 @@
 """
 Name: Pablo Guardia
-Date: 03/19/2025
-Assignment: Module 10: Basic Flask Website
-Due Date: 03/23/2025
+Date: 03/31/2025
+Assignment: Module 12: Encrypt Data in database
+Due Date: 04/06/2025
+
 About this project: This script is a unification of CustomerCreateDB.py and
 OrderCreateDB.py from Module 9's assignment.
+
+Update 1.1:
+- Added encryption to Name, PhNum, and LoginPassword fields in the
+Customers table and the CreditCardNum field in the Orders table.
+- Encryption is achieved via a new script: CustomerOrdersEncryption.py
+
 Assumptions: N/A
 All work below was performed by Pablo Guardia
 """
@@ -53,6 +60,7 @@ print("Orders table created!!")
 
 
 # Add a few records to the tables
+# Print all records afterwards
 customers = [
     (cipher.encrypt('Bethany Garner'), 34, cipher.encrypt('5123-6789'), 1,
     cipher.encrypt('garnerPass')),
