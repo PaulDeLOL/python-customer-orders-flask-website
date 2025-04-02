@@ -28,8 +28,7 @@ class AESCipher(object):
         cipher_function = Cipher(algorithms.AES(self.key), modes.CBC(self.iv))
         encryptor = cipher_function.encryptor()
 
-        plaintext = Padding.appendPadding(plaintext, blocksize
-        = Padding.AES_blocksize, mode = 'CBC')
+        plaintext = Padding.appendPadding(plaintext, blocksize = Padding.AES_blocksize, mode = 'CBC')
         raw = bytes(plaintext, 'utf-8')
         ciphertext = encryptor.update(raw) + encryptor.finalize()
 

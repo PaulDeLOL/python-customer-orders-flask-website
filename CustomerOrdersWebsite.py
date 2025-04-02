@@ -119,7 +119,8 @@ def home():
     if session.get('logged_in'):
         # Decrypt the current session's username to display it on top of the homepage
         decrypted_username = cipher.decrypt(session.get('username'))
-        return render_template("homepage.html", username = decrypted_username)
+        return render_template("homepage.html",
+            username = decrypted_username)
     else:
         flash("You must be logged in to access this page.")
         return redirect(url_for("login"))
@@ -150,7 +151,9 @@ def list_user_orders():
             user_order_rows._set_value(i, "CreditCardNum", cipher.decrypt(row["CreditCardNum"]))
         decrypted_username = cipher.decrypt(session.get('username'))
 
-        return render_template("listUserOrders.html", records = user_order_rows, username = decrypted_username)
+        return render_template("listUserOrders.html",
+            records = user_order_rows,
+            username = decrypted_username)
     else:
         flash("You must be logged in to access this page.")
         return redirect(url_for("login"))
@@ -231,19 +234,27 @@ def new_cust_result():
                     # If something went wrong, display the exception
                     conn.rollback()
                     msg = f"Error creating a new customer: {excpt}"
-                    return render_template("formResults.html", message = msg, errors_table = [])
+                    return render_template("formResults.html",
+                        message = msg,
+                        errors_table = [])
                 finally:
                     conn.close()
-                    return render_template("formResults.html", message = msg, errors_table = [])
+                    return render_template("formResults.html",
+                        message = msg,
+                        errors_table = [])
             # Otherwise, if err_table contains errors, display them all on the results page
             else:
                 msg = "Error creating a new customer:"
-                return render_template("formResults.html", message = msg, errors_table = err_table)
+                return render_template("formResults.html",
+                    message = msg,
+                    errors_table = err_table)
         # If the method was somehow not POST, address that and display an error
         else:
             msg = "Error creating a new customer: Request method is not POST."
             msg += " User attempted to access /newCustResult incorrectly."
-            return render_template("formResults.html", message = msg, errors_table = [])
+            return render_template("formResults.html",
+                message = msg,
+                errors_table = [])
     # If the user was not logged in, redirect them to the login page with an error
     else:
         flash("You must be logged in to access this page.")
@@ -276,7 +287,8 @@ def list_customers():
             cust_rows._set_value(i, "PhNum", cipher.decrypt(row["PhNum"]))
             cust_rows._set_value(i, "LoginPassword", cipher.decrypt(row["LoginPassword"]))
 
-        return render_template("listCustomers.html", records = cust_rows)
+        return render_template("listCustomers.html",
+            records = cust_rows)
     # Redirect the user to a "Not Found" page if their security level is invalid,
     # or back to the login page if they were not logged in at all
     elif session.get('security_level') != 1:
@@ -353,19 +365,27 @@ def new_order_result():
                     # If something went wrong, display the exception
                     conn.rollback()
                     msg = f"Error placing new order: {excpt}"
-                    return render_template("formResults.html", message = msg, errors_table = [])
+                    return render_template("formResults.html",
+                        message = msg,
+                        errors_table = [])
                 finally:
                     conn.close()
-                    return render_template("formResults.html", message = msg, errors_table = [])
+                    return render_template("formResults.html",
+                        message = msg,
+                        errors_table = [])
             # Otherwise, if err_table contains errors, display them all on the results page
             else:
                 msg = "Error placing new order:"
-                return render_template("formResults.html", message = msg, errors_table = err_table)
+                return render_template("formResults.html",
+                    message = msg,
+                    errors_table = err_table)
         # If the method was somehow not POST, address that and display an error
         else:
             msg = "Error placing new order: Request method is not POST."
             msg += " User might have attempted to access /newOrderResult incorrectly."
-            return render_template("formResults.html", message = msg, errors_table = [])
+            return render_template("formResults.html",
+                message = msg,
+                errors_table = [])
     # If the user was not logged in, redirect them to the login page with an error
     else:
         flash("You must be logged in to access this page.")
@@ -397,7 +417,8 @@ def list_orders():
         for i, row in order_rows.iterrows():
             order_rows._set_value(i, "CreditCardNum", cipher.decrypt(row["CreditCardNum"]))
 
-        return render_template("listOrders.html", records = order_rows)
+        return render_template("listOrders.html",
+            records = order_rows)
     # Redirect the user to a "Not Found" page if their security level is invalid,
     # or back to the login page if they were not logged in at all
     elif session.get('security_level') != 2:
