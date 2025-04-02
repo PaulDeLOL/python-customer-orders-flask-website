@@ -63,7 +63,7 @@ print("Orders table created!!")
 # Print all records afterwards
 customers = [
     (cipher.encrypt('Bethany Garner'), 34, cipher.encrypt('5123-6789'), 1,
-    cipher.encrypt('garnerPass')),
+    cipher.encrypt('bethanyPass')),
     (cipher.encrypt('Kohei Yamashita'), 65, cipher.encrypt('5555-9101'), 2,
      cipher.encrypt('koheiPass')),
     (cipher.encrypt('Andres de la Cruz'), 29, cipher.encrypt('1122-6412'), 1,
