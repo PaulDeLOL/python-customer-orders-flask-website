@@ -16,7 +16,7 @@
     {% endwith %}
 
     {% if session.get('logged_in') %}
-        <h1>Welcome, {{ session.get('username') }}!</h1>
+        <h1>Welcome, {{ username }}!</h1>
         <h3><a href="/listUserOrders">Show My Orders</a></h3>
 
         {% if session.get('security_level') >= 2 %}

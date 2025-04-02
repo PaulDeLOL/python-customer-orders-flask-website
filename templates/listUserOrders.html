@@ -16,7 +16,7 @@
     {% endwith %}
 
     {% if session.get('logged_in') %}
-        <h1>{{ session.get('username') }}'s Orders</h1>
+        <h1>{{ username }}'s Orders</h1>
 
         <table border=3>
             <tr align="center">
@@ -28,7 +28,7 @@
                 <td>Credit Card Number</td>
             </tr>
 
-            {% for entry in records %}
+            {% for i, entry in records.iterrows() %}
                 <tr>
                     <td>{{ entry['OrderId'] }}</td>
                     <td>{{ entry['CustId'] }}</td>

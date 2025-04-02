@@ -27,7 +27,7 @@
                 <td>Login Password</td>
             </tr>
 
-            {% for entry in records %}
+            {% for i, entry in records.iterrows() %}
                 <tr>
                     <td>{{ entry['Name'] }}</td>
                     <td>{{ entry['Age'] }}</td>

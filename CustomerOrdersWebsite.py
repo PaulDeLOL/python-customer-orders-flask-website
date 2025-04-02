@@ -26,7 +26,8 @@ from flask import (Flask, render_template, request,
                    redirect, url_for, session, flash)
 import sqlite3 as sql
 import os
-import CustomerOrdersEncryption
+from CustomerOrdersEncryption import cipher
+import pandas as pd
 
 app = Flask(__name__)
 
@@ -70,11 +71,14 @@ def login_check():
             username = request.form.get('Username', "", str)
             password = request.form.get('Password', "", str)
 
+            encrypted_username = cipher.encrypt(username)
+            encrypted_password = cipher.encrypt(password)
+
             # Checks if there is a record in the database matching the username and password
             cur.execute('''
                 SELECT * FROM Customers
                 WHERE Name == ? AND LoginPassword == ?;
-            ''', (username, password))
+            ''', (encrypted_username, encrypted_password))
             check = cur.fetchone()
 
             # If there is such a record, create session variables based on the user's data
@@ -114,7 +118,8 @@ def login_check():
 @app.route('/home')
 def home():
     if session.get('logged_in'):
-        return render_template("homepage.html")
+        decrypted_username = cipher.decrypt(session.get('username'))
+        return render_template("homepage.html", username = decrypted_username)
     else:
         flash("You must be logged in to access this page.")
         return redirect(url_for("login"))
@@ -123,17 +128,29 @@ def home():
 @app.route('/listUserOrders')
 def list_user_orders():
     if session.get('logged_in'):
-        # Displays the orders using sql.Row objects
-        # This allows name indexing in the HTML page
         conn = sql.connect("CustOrders.db")
         conn.row_factory = sql.Row
         cur = conn.cursor()
 
+        # No longer uses row objects itself, but now uses a Pandas DataFrame
+        # This allows for easier decryption of credit card numbers, while still
+        # allowing indexing by column name
         cur.execute('''SELECT * FROM Orders WHERE CustId == ?;''', (session['id'],))
-        user_order_rows = cur.fetchall()
+        user_order_rows = pd.DataFrame(cur.fetchall(), columns = [
+            "OrderId",
+            "CustId",
+            "ItemSkewNum",
+            "Quantity",
+            "Price",
+            "CreditCardNum"])
         conn.close()
 
-        return render_template("listUserOrders.html", records = user_order_rows)
+        # Decryption of data
+        for i, row in user_order_rows.iterrows():
+            user_order_rows._set_value(i, "CreditCardNum", cipher.decrypt(row["CreditCardNum"]))
+        decrypted_username = cipher.decrypt(session.get('username'))
+
+        return render_template("listUserOrders.html", records = user_order_rows, username = decrypted_username)
     else:
         flash("You must be logged in to access this page.")
         return redirect(url_for("login"))
@@ -196,10 +213,15 @@ def new_cust_result():
                     conn = sql.connect("CustOrders.db")
                     cur = conn.cursor()
 
+                    encrypted_name = cipher.encrypt(new_name)
+                    encrypted_number = cipher.encrypt(new_number)
+                    encrypted_password = cipher.encrypt(new_password)
+
                     cur.execute('''
                         INSERT INTO Customers (Name, Age, PhNum, SecurityLevel, LoginPassword)
                         VALUES (?, ?, ?, ?, ?);
-                    ''', (new_name, new_age, new_number, new_level, new_password))
+                    ''', (encrypted_name, new_age, encrypted_number, new_level,
+                          encrypted_password))
 
                     conn.commit()
                     msg = "Customer successfully created!"
@@ -236,8 +258,19 @@ def list_customers():
         cur = conn.cursor()
 
         cur.execute('''SELECT * FROM Customers;''')
-        cust_rows = cur.fetchall()
+        cust_rows = pd.DataFrame(cur.fetchall(), columns = [
+            "CustId",
+            "Name",
+            "Age",
+            "PhNum",
+            "SecurityLevel",
+            "LoginPassword"])
         conn.close()
+
+        for i, row in cust_rows.iterrows():
+            cust_rows._set_value(i, "Name", cipher.decrypt(row["Name"]))
+            cust_rows._set_value(i, "PhNum", cipher.decrypt(row["PhNum"]))
+            cust_rows._set_value(i, "LoginPassword", cipher.decrypt(row["LoginPassword"]))
 
         return render_template("listCustomers.html", records = cust_rows)
     # Redirect the user to a "Not Found" page if their security level is invalid,
@@ -300,10 +333,13 @@ def new_order_result():
                     conn = sql.connect("CustOrders.db")
                     cur = conn.cursor()
 
+                    encrypted_card_num = cipher.encrypt(new_card_num)
+
                     cur.execute('''
                         INSERT INTO Orders (CustId, ItemSkewNum, Quantity, Price, CreditCardNum)
                         VALUES (?, ?, ?, ?, ?);
-                    ''', (new_cust_id, new_sku_num, new_quantity, new_price, new_card_num))
+                    ''', (new_cust_id, new_sku_num, new_quantity, new_price,
+                          encrypted_card_num))
 
                     conn.commit()
                     msg = "Order successfully placed!"
@@ -340,8 +376,18 @@ def list_orders():
         cur = conn.cursor()
 
         cur.execute('''SELECT * FROM Orders;''')
-        order_rows = cur.fetchall()
+        order_rows = pd.DataFrame(cur.fetchall(), columns = [
+            "OrderId",
+            "CustId",
+            "ItemSkewNum",
+            "Quantity",
+            "Price",
+            "CreditCardNum"
+        ])
         conn.close()
+
+        for i, row in order_rows.iterrows():
+            order_rows._set_value(i, "CreditCardNum", cipher.decrypt(row["CreditCardNum"]))
 
         return render_template("listOrders.html", records = order_rows)
     # Redirect the user to a "Not Found" page if their security level is invalid,
