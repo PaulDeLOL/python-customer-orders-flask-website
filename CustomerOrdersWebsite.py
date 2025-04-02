@@ -1,22 +1,18 @@
 """
 Name: Pablo Guardia
-Date: 03/22/2025
-Assignment: Module 11: Role Based Access Control
-Due Date: 03/30/2025
+Date: 03/31/2025
+Assignment: Module 12: Encrypt Data in database
+Due Date: 04/06/2025
 
 About this project: This script is a basic website written in Flask that
 allows users to manage customers and the ordering of items from a hypothetical
 database. Each user has a set security level that gives them different
 privileges, enabling role-based access control.
 
-Update 1.1:
-- Added role-based access control based on security levels, done via a new
-login.html page, its corresponding Flask function, the addition of session
-variables like "logged_in", and the checking of correct security levels.
-- Added newOrder.html and its corresponding Flask function, which allows
-users to place new orders which are added to the database.
-- Added listUserOrders.html and its corresponding Flask function, which
-lists all orders placed by the user currently logged in.
+Update 1.2:
+- Added functionality to encrypt records going into the database when being
+created by users, and also the ability to decrypt records when being
+displayed to users when they head to the "list customers/orders" pages.
 
 Assumptions: N/A
 All work below was performed by Pablo Guardia
@@ -71,10 +67,13 @@ def login_check():
             username = request.form.get('Username', "", str)
             password = request.form.get('Password', "", str)
 
+            # Encrypts the username and password the user entered in so that
+            # they match the entries in the database
             encrypted_username = cipher.encrypt(username)
             encrypted_password = cipher.encrypt(password)
 
-            # Checks if there is a record in the database matching the username and password
+            # Checks if there is a record in the database matching the
+            # encrypted username and password
             cur.execute('''
                 SELECT * FROM Customers
                 WHERE Name == ? AND LoginPassword == ?;
@@ -118,6 +117,7 @@ def login_check():
 @app.route('/home')
 def home():
     if session.get('logged_in'):
+        # Decrypt the current session's username to display it on top of the homepage
         decrypted_username = cipher.decrypt(session.get('username'))
         return render_template("homepage.html", username = decrypted_username)
     else:
@@ -132,9 +132,9 @@ def list_user_orders():
         conn.row_factory = sql.Row
         cur = conn.cursor()
 
-        # No longer uses row objects itself, but now uses a Pandas DataFrame
-        # This allows for easier decryption of credit card numbers, while still
-        # allowing indexing by column name
+        # No longer uses row objects by themselves, but now uses a Pandas
+        # DataFrame. This allows for easier decryption of credit card
+        # numbers, while still allowing indexing by column name
         cur.execute('''SELECT * FROM Orders WHERE CustId == ?;''', (session['id'],))
         user_order_rows = pd.DataFrame(cur.fetchall(), columns = [
             "OrderId",
@@ -213,6 +213,8 @@ def new_cust_result():
                     conn = sql.connect("CustOrders.db")
                     cur = conn.cursor()
 
+                    # Encrypts the data entered by the user so that it is
+                    # stored securely in the database
                     encrypted_name = cipher.encrypt(new_name)
                     encrypted_number = cipher.encrypt(new_number)
                     encrypted_password = cipher.encrypt(new_password)
@@ -251,12 +253,13 @@ def new_cust_result():
 @app.route('/listCustomers')
 def list_customers():
     if session.get('logged_in') and session.get('security_level') == 1:
-        # Displays the customers using sql.Row objects
-        # This allows name indexing in the HTML page
         conn = sql.connect("CustOrders.db")
         conn.row_factory = sql.Row
         cur = conn.cursor()
 
+        # No longer uses row objects by themselves, but now uses a Pandas
+        # DataFrame. This allows for easier decryption of credit card
+        # numbers, while still allowing indexing by column name
         cur.execute('''SELECT * FROM Customers;''')
         cust_rows = pd.DataFrame(cur.fetchall(), columns = [
             "CustId",
@@ -267,6 +270,7 @@ def list_customers():
             "LoginPassword"])
         conn.close()
 
+        # Decryption of data
         for i, row in cust_rows.iterrows():
             cust_rows._set_value(i, "Name", cipher.decrypt(row["Name"]))
             cust_rows._set_value(i, "PhNum", cipher.decrypt(row["PhNum"]))
@@ -333,6 +337,8 @@ def new_order_result():
                     conn = sql.connect("CustOrders.db")
                     cur = conn.cursor()
 
+                    # Encrypts the data entered by the user so that it is
+                    # stored securely in the database
                     encrypted_card_num = cipher.encrypt(new_card_num)
 
                     cur.execute('''
@@ -369,12 +375,13 @@ def new_order_result():
 @app.route('/listOrders')
 def list_orders():
     if session.get('logged_in') and session.get('security_level') == 2:
-        # Displays the orders using sql.Row objects
-        # This allows name indexing in the HTML page
         conn = sql.connect("CustOrders.db")
         conn.row_factory = sql.Row
         cur = conn.cursor()
 
+        # No longer uses row objects by themselves, but now uses a Pandas
+        # DataFrame. This allows for easier decryption of credit card
+        # numbers, while still allowing indexing by column name
         cur.execute('''SELECT * FROM Orders;''')
         order_rows = pd.DataFrame(cur.fetchall(), columns = [
             "OrderId",
@@ -386,6 +393,7 @@ def list_orders():
         ])
         conn.close()
 
+        # Decryption of data
         for i, row in order_rows.iterrows():
             order_rows._set_value(i, "CreditCardNum", cipher.decrypt(row["CreditCardNum"]))
 

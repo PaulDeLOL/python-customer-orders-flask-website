@@ -28,6 +28,7 @@
                 <td>Credit Card Number</td>
             </tr>
 
+            <!-- Slightly changed to fit Pandas DataFrame logic-->
             {% for i, entry in records.iterrows() %}
                 <tr>
                     <td>{{ entry['OrderId'] }}</td>

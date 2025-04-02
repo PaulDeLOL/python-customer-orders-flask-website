@@ -1,3 +1,20 @@
+"""
+Name: Pablo Guardia
+Date: 03/31/2025
+Assignment: Module 12: Encrypt Data in database
+Due Date: 04/06/2025
+
+About this project: This script is an implementation of an
+encryption/decryption class in order to provide encryption functionality to
+the Customer Orders Flask website. The code is based on an encryption
+mechanism I used together with my team in CEN4090L: Software Engineering
+Capstone as part of our software project for that class, which was also a
+Flask website.
+
+Assumptions: N/A
+All work below was performed by Pablo Guardia
+"""
+
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import Padding
 
