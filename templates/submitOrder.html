@@ -5,6 +5,52 @@
     <title>Submit an Order!</title>
 </head>
 <body>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
 
+    {% if session.get('logged_in') %}
+        <h1>Submit an Order</h1>
+        <br>
+
+        <form action="/newOrderResult" method="POST">
+            <b>Customer ID:</b><br>
+            <input type="text" name="CustID">
+            <br><br>
+
+            <b>Item Skew Number:</b><br>
+            <input type="text" name="SKUNum">
+            <br><br>
+
+            <b>Quantity:</b><br>
+            <input type="text" name="Quantity">
+            <br><br>
+
+            <b>Price:</b><br>
+            <input type="text" name="Price">
+            <br><br>
+
+            <b>Credit Card Number:</b><br>
+            <input type="text" name="CardNum">
+            <br><br>
+
+            <input type="submit" value="Submit">
+            <br><br>
+        </form>
+
+        <h3><a href="/">Go back to homepage</a></h3>
+    {% elif not session.get('logged_in') %}
+        <h2>You must be logged in to access this page...</h2>
+        <h3><a href="/login">Go to login page</a></h3>
+    {% else %}
+        <h1>Not Found</h1>
+        The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+    {% endif %}
 </body>
 </html>
