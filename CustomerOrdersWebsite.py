@@ -429,6 +429,18 @@ def list_orders():
     else:
         return redirect("/notFound")
 
+@app.route('/submitOrder')
+def submit_order():
+    if session.get('logged_in') and session.get('security_level') == 2:
+        return render_template("submitOrder.html")
+    elif session.get('security_level') != 2:
+        return redirect("/notFound")
+    elif not session.get('logged_in'):
+        flash("You must be logged in to access this page.")
+        return redirect(url_for("login"))
+    else:
+        return redirect("/notFound")
+
 # Logs the user out while clearing all session variables
 @app.route('/logout')
 def logout():
