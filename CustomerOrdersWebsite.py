@@ -466,26 +466,33 @@ def submit_order_result():
                 SELECT * FROM Customers WHERE CustId = ?;
             ''', (sub_cust_id,))
             cust_id_check = cur.fetchone()
+            conn.close()
 
             if sub_cust_id is None or sub_cust_id == -1:
-                err_table.append("Can't submit order; Customer ID field is blank or invalid")
+                err_table.append("Can't submit order; 'Customer ID' field is blank or invalid")
+            elif not isinstance(sub_cust_id, int):
+                err_table.append("customer ID should be an integer")
             elif sub_cust_id <= 0:
-                err_table.append("Can't submit order; Customer ID must be greater than 0")
+                err_table.append("Can't submit order; customer ID must be greater than 0")
             elif cust_id_check is None:
-                err_table.append("Can't submit order; Customer ID not found in database")
+                err_table.append("Can't submit order; customer ID not found in database.")
 
             if sub_sku_num is None or sub_sku_num.strip() == "":
                 err_table.append("Can't submit order; 'Item SKU Number' field is blank or invalid")
 
             if sub_quantity is None or sub_quantity == -1:
                 err_table.append("Can't submit order; 'Quantity' field is blank or invalid")
+            elif not isinstance(sub_quantity, int):
+                err_table.append("Can't submit order; quantity should be an integer")
             elif sub_quantity <= 0:
-                err_table.append("Can't submit order; 'Quantity' must be greater than 0")
+                err_table.append("Can't submit order; quantity must be greater than 0")
 
             if sub_price is None or sub_price == -1.0:
                 err_table.append("Can't submit order; 'Price' field is blank or invalid")
+            elif not isinstance(sub_price, float):
+                err_table.append("Can't submit order; price should be a real number with at least 2 decimal places")
             elif sub_price <= 0.0:
-                err_table.append("Can't submit order; 'Price' must be greater than 0")
+                err_table.append("Can't submit order; price must be greater than 0")
 
             if sub_card_num is None or sub_card_num.strip() == "":
                 err_table.append("Can't submit order; 'Credit Card Number' field is blank or invalid")
@@ -495,25 +502,24 @@ def submit_order_result():
                     HOST, PORT = "localhost", 9999
                     sock = socket(AF_INET, SOCK_STREAM)
                     sock.connect((HOST, PORT))
+                    sock_msg = ""
 
-                    sock_msg = (f"""
-                        Customer ID: {sub_cust_id}\n
-                        Item SKU Number: {sub_sku_num}\n
-                        Quantity: {sub_quantity}\n
-                        Price: {sub_price}\n
-                        Credit Card Number: {sub_card_num}\n
-                    """)
+                    sock_msg += f"Customer ID: {sub_cust_id}\n"
+                    sock_msg += f"Item SKU Number: {sub_sku_num}\n"
+                    sock_msg += f"Quantity: {sub_quantity}\n"
+                    sock_msg += f"Price: {sub_price}\n"
+                    sock_msg += f"Card Number: {sub_card_num}\n"
                     sock_msg = cipher.encrypt(sock_msg)
 
                     sock.sendall(sock_msg)
+                    sock.close()
                     msg = "Order successfully submitted!"
-                except sock.error as excpt:
+                except Exception as excpt:
                     msg = f"Error submitting order: {excpt}"
                     return render_template("formResults.html",
                         message = msg,
                         errors_table = [])
                 finally:
-                    sock.close()
                     return render_template("formResults.html",
                         message = msg,
                         errors_table = [])
