@@ -24,6 +24,7 @@ import sqlite3 as sql
 import os
 from CustomerOrdersEncryption import cipher
 import pandas as pd
+from socket import socket, AF_INET, SOCK_STREAM
 
 app = Flask(__name__)
 
@@ -440,6 +441,96 @@ def submit_order():
         return redirect(url_for("login"))
     else:
         return redirect("/notFound")
+
+@app.route('/submitOrderResult', methods = ['POST', 'GET'])
+def submit_order_result():
+    if session.get('logged_in'):
+        if request.method == 'POST':
+            err_table = []
+            conn = sql.connect("CustOrders.db")
+            cur = conn.cursor()
+
+            sub_cust_id = request.form.get('CustID', -1, int)
+            sub_sku_num = request.form.get('SKUNum', "", str)
+            sub_quantity = request.form.get('Quantity', -1, int)
+            sub_price = request.form.get('Price', -1.0, float)
+            sub_card_num = request.form.get('CardNum', "", str)
+
+            # print(sub_card_num)
+            # print(cipher.encrypt(sub_card_num))
+            # print(bytes(cipher.decrypt(cipher.encrypt(sub_card_num)), "UTF-8"))
+            # thing = cipher.encrypt(sub_card_num)
+            # print(str(thing.decode("UTF-8")))
+
+            cur.execute('''
+                SELECT * FROM Customers WHERE CustId = ?;
+            ''', (sub_cust_id,))
+            cust_id_check = cur.fetchone()
+
+            if sub_cust_id is None or sub_cust_id == -1:
+                err_table.append("Can't submit order; Customer ID field is blank or invalid")
+            elif sub_cust_id <= 0:
+                err_table.append("Can't submit order; Customer ID must be greater than 0")
+            elif cust_id_check is None:
+                err_table.append("Can't submit order; Customer ID not found in database")
+
+            if sub_sku_num is None or sub_sku_num.strip() == "":
+                err_table.append("Can't submit order; 'Item SKU Number' field is blank or invalid")
+
+            if sub_quantity is None or sub_quantity == -1:
+                err_table.append("Can't submit order; 'Quantity' field is blank or invalid")
+            elif sub_quantity <= 0:
+                err_table.append("Can't submit order; 'Quantity' must be greater than 0")
+
+            if sub_price is None or sub_price == -1.0:
+                err_table.append("Can't submit order; 'Price' field is blank or invalid")
+            elif sub_price <= 0.0:
+                err_table.append("Can't submit order; 'Price' must be greater than 0")
+
+            if sub_card_num is None or sub_card_num.strip() == "":
+                err_table.append("Can't submit order; 'Credit Card Number' field is blank or invalid")
+
+            if len(err_table) == 0:
+                try:
+                    HOST, PORT = "localhost", 9999
+                    sock = socket(AF_INET, SOCK_STREAM)
+                    sock.connect((HOST, PORT))
+
+                    sock_msg = (f"""
+                        Customer ID: {sub_cust_id}\n
+                        Item SKU Number: {sub_sku_num}\n
+                        Quantity: {sub_quantity}\n
+                        Price: {sub_price}\n
+                        Credit Card Number: {sub_card_num}\n
+                    """)
+                    sock_msg = cipher.encrypt(sock_msg)
+
+                    sock.sendall(sock_msg)
+                    msg = "Order successfully submitted!"
+                except sock.error as excpt:
+                    msg = f"Error submitting order: {excpt}"
+                    return render_template("formResults.html",
+                        message = msg,
+                        errors_table = [])
+                finally:
+                    sock.close()
+                    return render_template("formResults.html",
+                        message = msg,
+                        errors_table = [])
+            else:
+                msg = "Error submitting order"
+                return render_template("formResults.html",
+                    message = msg,
+                    errors_table = err_table)
+        else:
+            msg = "Error submitting order: Request method is not POST."
+            msg += " User might have attempted to access /submitOrderResult incorrectly."
+            return render_template("formResults.html",
+                message = msg,
+                errors_table = [])
+    else:
+        flash("You must be logged in to access this page.")
+        return redirect(url_for("login"))
 
 # Logs the user out while clearing all session variables
 @app.route('/logout')
