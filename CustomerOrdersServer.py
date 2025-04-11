@@ -4,7 +4,7 @@ import sqlite3 as sql
 
 class MyTCPHandler(BaseRequestHandler):
     def handle(self):
-        encrypted_message = self.request.recv(1024).strip()
+        encrypted_message = self.request.recv(1024)
         message = cipher.decrypt(encrypted_message)
 
         values = []
@@ -84,11 +84,13 @@ class MyTCPHandler(BaseRequestHandler):
             finally:
                 conn.close()
                 print("\n", end = "")
+        """
         else:
             print("Error adding record:")
             for err in err_table:
                 print(f"    - {err}")
             print("\n", end = "")
+        """
 
 
 if __name__ == '__main__':
