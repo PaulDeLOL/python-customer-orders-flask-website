@@ -1,18 +1,20 @@
 """
 Name: Pablo Guardia
-Date: 03/31/2025
-Assignment: Module 12: Encrypt Data in database
-Due Date: 04/06/2025
+Date: 04/07/2025
+Assignment: Module 13: Send Encrypted Message
+Due Date: 04/13/2025
 
 About this project: This script is a basic website written in Flask that
 allows users to manage customers and the ordering of items from a hypothetical
 database. Each user has a set security level that gives them different
 privileges, enabling role-based access control.
 
-Update 1.2:
-- Added functionality to encrypt records going into the database when being
-created by users, and also the ability to decrypt records when being
-displayed to users when they head to the "list customers/orders" pages.
+Update 1.3:
+- Added the "Submit An Order" page, which is similar to "Add New Order", but it
+allows level 2 users to submit an order for ANY customer ID, which is then
+processed by another Python script that acts like a server. The server is what
+performs the addition of records to the database in this menu option, and the
+appropriate data is encrypted when being sent to the server.
 
 Assumptions: N/A
 All work below was performed by Pablo Guardia
@@ -430,10 +432,14 @@ def list_orders():
     else:
         return redirect("/notFound")
 
+# Page containing a form to let the user submit a new order
+# Similar to "Add New Order", but works with a server
 @app.route('/submitOrder')
 def submit_order():
     if session.get('logged_in') and session.get('security_level') == 2:
         return render_template("submitOrder.html")
+    # Redirect the user to a "Not Found" page if their security level is invalid,
+    # or back to the login page if they were not logged in at all
     elif session.get('security_level') != 2:
         return redirect("/notFound")
     elif not session.get('logged_in'):
@@ -442,32 +448,33 @@ def submit_order():
     else:
         return redirect("/notFound")
 
+# Page displaying the results of submitting a new order (or failing to do so!)
 @app.route('/submitOrderResult', methods = ['POST', 'GET'])
 def submit_order_result():
     if session.get('logged_in'):
         if request.method == 'POST':
+            # Stores error messages in a table
             err_table = []
             conn = sql.connect("CustOrders.db")
             cur = conn.cursor()
 
+            # Obtains the fields from the form filled out
             sub_cust_id = request.form.get('CustID', -1, int)
             sub_sku_num = request.form.get('SKUNum', "", str)
             sub_quantity = request.form.get('Quantity', -1, int)
             sub_price = request.form.get('Price', -1.0, float)
             sub_card_num = request.form.get('CardNum', "", str)
 
-            # print(sub_card_num)
-            # print(cipher.encrypt(sub_card_num))
-            # print(bytes(cipher.decrypt(cipher.encrypt(sub_card_num)), "UTF-8"))
-            # thing = cipher.encrypt(sub_card_num)
-            # print(str(thing.decode("UTF-8")))
-
+            # Performs a quick SELECT query on the database to check if the
+            # Customer ID the user entered exists in the database
             cur.execute('''
                 SELECT * FROM Customers WHERE CustId = ?;
             ''', (sub_cust_id,))
             cust_id_check = cur.fetchone()
             conn.close()
 
+            # Validates input according to constraints defined in assignment instructions
+            # Examples: No empty strings, quantity greater than 0, etc.
             if sub_cust_id is None or sub_cust_id == -1:
                 err_table.append("Can't submit order; 'Customer ID' field is blank or invalid")
             elif not isinstance(sub_cust_id, int):
@@ -497,13 +504,18 @@ def submit_order_result():
             if sub_card_num is None or sub_card_num.strip() == "":
                 err_table.append("Can't submit order; 'Credit Card Number' field is blank or invalid")
 
+            # If err_table has no elements, meaning no errors occurred...
             if len(err_table) == 0:
                 try:
+                    # Connect to a "localhost" server with port 9999
                     HOST, PORT = "localhost", 9999
                     sock = socket(AF_INET, SOCK_STREAM)
                     sock.connect((HOST, PORT))
                     sock_msg = ""
 
+                    # Construct the message to be sent, made up of the values
+                    # the user entered. The entire message will be encrypted
+                    # before being sent
                     sock_msg += f"Customer ID: {sub_cust_id}\n"
                     sock_msg += f"Item SKU Number: {sub_sku_num}\n"
                     sock_msg += f"Quantity: {sub_quantity}\n"
@@ -511,10 +523,12 @@ def submit_order_result():
                     sock_msg += f"Card Number: {sub_card_num}\n"
                     sock_msg = cipher.encrypt(sock_msg)
 
+                    # Sends the message and closes the connection to the server
                     sock.sendall(sock_msg)
                     sock.close()
                     msg = "Order successfully submitted!"
                 except Exception as excpt:
+                    # If something went wrong, display the exception
                     msg = f"Error submitting order: {excpt}"
                     return render_template("formResults.html",
                         message = msg,
@@ -523,17 +537,20 @@ def submit_order_result():
                     return render_template("formResults.html",
                         message = msg,
                         errors_table = [])
+            # Otherwise, if err_table contains errors, display them all on the results page
             else:
                 msg = "Error submitting order"
                 return render_template("formResults.html",
                     message = msg,
                     errors_table = err_table)
+        # If the method was somehow not POST, address that and display an error
         else:
             msg = "Error submitting order: Request method is not POST."
             msg += " User might have attempted to access /submitOrderResult incorrectly."
             return render_template("formResults.html",
                 message = msg,
                 errors_table = [])
+    # If the user was not logged in, redirect them to the login page with an error
     else:
         flash("You must be logged in to access this page.")
         return redirect(url_for("login"))
