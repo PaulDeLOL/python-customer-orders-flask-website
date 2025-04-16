@@ -27,6 +27,7 @@ import os
 from CustomerOrdersEncryption import cipher
 import pandas as pd
 from socket import socket, AF_INET, SOCK_STREAM
+import hmac, hashlib
 
 app = Flask(__name__)
 
@@ -590,10 +591,32 @@ def delete_order_result():
 
             if len(err_table) == 0:
                 # ---------------------- New code should start here ----------------------
-                    pass
+                try:
+                    HOST, PORT = "localhost", 8888
+                    sock = socket(AF_INET, SOCK_STREAM)
+                    sock.connect((HOST, PORT))
+
+                    msg_body = str(order_id)
+                    encrypted_msg_body = cipher.encrypt(msg_body)
+                    authentication_key = b'dc6f3f59'
+                    computed_signature = hmac.new(authentication_key, msg_body.encode("UTF-8"), digestmod = hashlib.sha3_512).digest()
+                    sock_msg = encrypted_msg_body + computed_signature
+
+                    sock.sendall(sock_msg)
+                    sock.close()
+                    msg = "Message to delete order successfully sent!"
+                except Exception as excpt:
+                    msg = f"Error: Message to delete order not sent -----> {excpt}"
+                    return render_template("formResults.html",
+                        message = msg,
+                        errors_table = [])
+                finally:
+                    return render_template("formResults.html",
+                        message = msg,
+                        errors_table = [])
                 # ----------------------  New code should end here  ----------------------
             else:
-                msg = "Error deleting order"
+                msg = "Error: Message to delete order not sent..."
                 return render_template("formResults.html",
                     message = msg,
                     errors_table = err_table)
