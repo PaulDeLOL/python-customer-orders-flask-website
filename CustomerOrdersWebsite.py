@@ -478,7 +478,7 @@ def submit_order_result():
             if sub_cust_id is None or sub_cust_id == -1:
                 err_table.append("Can't submit order; 'Customer ID' field is blank or invalid")
             elif not isinstance(sub_cust_id, int):
-                err_table.append("customer ID should be an integer")
+                err_table.append("Can't submit order; customer ID should be an integer")
             elif sub_cust_id <= 0:
                 err_table.append("Can't submit order; customer ID must be greater than 0")
             elif cust_id_check is None:
@@ -551,6 +551,58 @@ def submit_order_result():
                 message = msg,
                 errors_table = [])
     # If the user was not logged in, redirect them to the login page with an error
+    else:
+        flash("You must be logged in to access this page.")
+        return redirect(url_for("login"))
+
+@app.route('/deleteOrder')
+def delete_order():
+    if session.get('logged_in'):
+        return render_template("deleteOrder.html")
+    else:
+        flash("You must be logged in to access this page.")
+        return redirect(url_for("login"))
+
+@app.route('/deleteOrderResult', methods = ['POST', 'GET'])
+def delete_order_result():
+    if session.get('logged_in'):
+        if request.method == "POST":
+            err_table = []
+            conn = sql.connect("CustOrders.db")
+            cur = conn.cursor()
+
+            order_id = request.form.get("OrderID", -1, int)
+
+            cur.execute('''
+                SELECT * FROM Orders WHERE OrderId == ?;
+            ''', (order_id,))
+            order_id_check = cur.fetchone()
+            conn.close()
+
+            if order_id is None or order_id == -1:
+                err_table.append("Can't delete order; 'Order ID' field is blank or invalid")
+            elif not isinstance(order_id, int):
+                err_table.append("Can't delete order; order ID should be an integer")
+            elif order_id <= 0:
+                err_table.append("Can't delete order; order ID must be greater than 0")
+            elif order_id_check is None:
+                err_table.append("Can't delete order; order ID not found in database.")
+
+            if len(err_table) == 0:
+                # ---------------------- New code should start here ----------------------
+                    pass
+                # ----------------------  New code should end here  ----------------------
+            else:
+                msg = "Error deleting order"
+                return render_template("formResults.html",
+                    message = msg,
+                    errors_table = err_table)
+        else:
+            msg = "Error deleting order: Request method is not POST."
+            msg += " User might have attempted to access /deleteOrderResult incorrectly."
+            return render_template("formResults.html",
+                message = msg,
+                errors_table = [])
     else:
         flash("You must be logged in to access this page.")
         return redirect(url_for("login"))
