@@ -116,6 +116,7 @@ class MyTCPHandler(BaseRequestHandler):
             finally:
                 conn.close()
                 print("\n", end = "")
+        # Otherwise, if err_table contains errors, display them all on the results page
         """
         else:
             print("Error adding record:")

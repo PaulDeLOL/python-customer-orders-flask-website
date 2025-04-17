@@ -1,20 +1,22 @@
 """
 Name: Pablo Guardia
-Date: 04/07/2025
-Assignment: Module 13: Send Encrypted Message
-Due Date: 04/13/2025
+Date: 04/15/2025
+Assignment: Module 14: Send Authenticated Message
+Due Date: 04/20/2025
 
 About this project: This script is a basic website written in Flask that
 allows users to manage customers and the ordering of items from a hypothetical
 database. Each user has a set security level that gives them different
 privileges, enabling role-based access control.
 
-Update 1.3:
-- Added the "Submit An Order" page, which is similar to "Add New Order", but it
-allows level 2 users to submit an order for ANY customer ID, which is then
-processed by another Python script that acts like a server. The server is what
-performs the addition of records to the database in this menu option, and the
-appropriate data is encrypted when being sent to the server.
+Update 1.4:
+- Added the "Delete An Order" page, which is similar to "Submit New Order", but it
+allows all users to delete any order from the database by simply providing an ID,
+which is then processed by another Python script that acts like a server. The server
+is what performs the addition of records to the database in this menu option, and the
+appropriate data is encrypted when being sent to the server. In addition, the ID
+entered by the user is not only encrypted but also has an authentication tag appended
+to it, in order to add user authentication functionality.
 
 Assumptions: N/A
 All work below was performed by Pablo Guardia
@@ -556,6 +558,8 @@ def submit_order_result():
         flash("You must be logged in to access this page.")
         return redirect(url_for("login"))
 
+# Page containing a form to let the user submit an order to delete
+# Said order is removed from the database
 @app.route('/deleteOrder')
 def delete_order():
     if session.get('logged_in'):
@@ -564,22 +568,29 @@ def delete_order():
         flash("You must be logged in to access this page.")
         return redirect(url_for("login"))
 
+# Page displaying the results of deleting an order (or failing to do so!)
 @app.route('/deleteOrderResult', methods = ['POST', 'GET'])
 def delete_order_result():
     if session.get('logged_in'):
         if request.method == "POST":
+            # Stores error messages in a table
             err_table = []
             conn = sql.connect("CustOrders.db")
             cur = conn.cursor()
 
+            # Obtains the Order ID from the form filled out
             order_id = request.form.get("OrderID", -1, int)
 
+            # Performs a quick SELECT query on the database to check if the
+            # Order ID the user entered exists in the database
             cur.execute('''
                 SELECT * FROM Orders WHERE OrderId == ?;
             ''', (order_id,))
             order_id_check = cur.fetchone()
             conn.close()
 
+            # Validates input according to constraints defined in assignment instructions
+            # In this case, Order ID should be greater than 0 and exist in the database
             if order_id is None or order_id == -1:
                 err_table.append("Can't delete order; 'Order ID' field is blank or invalid")
             elif not isinstance(order_id, int):
@@ -589,23 +600,29 @@ def delete_order_result():
             elif order_id_check is None:
                 err_table.append("Can't delete order; order ID not found in database.")
 
+            # If err_table has no elements, meaning no errors occurred...
             if len(err_table) == 0:
                 # ---------------------- New code should start here ----------------------
                 try:
+                    # Connect to a "localhost" server with port 8888
                     HOST, PORT = "localhost", 8888
                     sock = socket(AF_INET, SOCK_STREAM)
                     sock.connect((HOST, PORT))
 
+                    # Construct the message to be sent, made up of the order ID the user entered
+                    # The message will be encrypted and an HMAC authentication tag will be appended to it
                     msg_body = str(order_id)
                     encrypted_msg_body = cipher.encrypt(msg_body)
                     authentication_key = b'dc6f3f59'
                     computed_signature = hmac.new(authentication_key, msg_body.encode("UTF-8"), digestmod = hashlib.sha3_512).digest()
                     sock_msg = encrypted_msg_body + computed_signature
 
+                    # Sends the message and closes the connection to the server
                     sock.sendall(sock_msg)
                     sock.close()
                     msg = "Message to delete order successfully sent!"
                 except Exception as excpt:
+                    # If something went wrong, display the exception
                     msg = f"Error: Message to delete order not sent -----> {excpt}"
                     return render_template("formResults.html",
                         message = msg,
@@ -614,18 +631,20 @@ def delete_order_result():
                     return render_template("formResults.html",
                         message = msg,
                         errors_table = [])
-                # ----------------------  New code should end here  ----------------------
+            # Otherwise, if err_table contains errors, display them all on the results page
             else:
                 msg = "Error: Message to delete order not sent..."
                 return render_template("formResults.html",
                     message = msg,
                     errors_table = err_table)
+        # If the method was somehow not POST, address that and display an error
         else:
             msg = "Error deleting order: Request method is not POST."
             msg += " User might have attempted to access /deleteOrderResult incorrectly."
             return render_template("formResults.html",
                 message = msg,
                 errors_table = [])
+    # If the user was not logged in, redirect them to the login page with an error
     else:
         flash("You must be logged in to access this page.")
         return redirect(url_for("login"))
